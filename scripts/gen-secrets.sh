@@ -7,5 +7,6 @@ gen() { openssl rand -hex "$1"; }
 
 echo "# --- generated secrets ($(date -u +%Y-%m-%dT%H:%M:%SZ)) ---"
 echo "JWT_SECRET=$(gen 32)"
+echo "NEXTAUTH_SECRET=$(gen 32)"  # JWT sign/verify secret (required for login)
 echo "ENCRYPTION_KEY=$(gen 16)"   # 32 hex chars
 echo "SESSION_SECRET=$(gen 32)"

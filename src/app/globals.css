@@ -3,12 +3,39 @@
 @tailwind utilities;
 
 @layer base {
-  :root {
+  /* Semantic palette as RGB-triplet CSS variables so Tailwind's
+     surface/line/ink tokens flip between themes. Dark is the default;
+     .light overrides. Tokens consume these via rgb(var(--x)) in the
+     Tailwind config, so opacity modifiers (e.g. bg-surface/80) still work. */
+  :root,
+  .dark {
     color-scheme: dark;
+    --surface-base: 11 17 32;      /* #0B1120 */
+    --surface: 15 23 42;           /* #0F172A */
+    --surface-raised: 22 32 51;    /* #162033 */
+    --surface-inset: 30 41 59;     /* #1E293B */
+    --line: 31 42 60;              /* #1F2A3C */
+    --line-strong: 51 65 85;       /* #334155 */
+    --ink: 230 237 247;            /* #E6EDF7 */
+    --ink-muted: 148 163 184;      /* #94A3B8 */
+    --ink-faint: 100 116 139;      /* #64748B */
+  }
+
+  .light {
+    color-scheme: light;
+    --surface-base: 241 245 249;   /* #F1F5F9 */
+    --surface: 255 255 255;        /* #FFFFFF */
+    --surface-raised: 255 255 255; /* #FFFFFF */
+    --surface-inset: 248 250 252;  /* #F8FAFC */
+    --line: 226 232 240;           /* #E2E8F0 */
+    --line-strong: 203 213 225;    /* #CBD5E1 */
+    --ink: 15 23 42;               /* #0F172A */
+    --ink-muted: 71 85 105;        /* #475569 */
+    --ink-faint: 100 116 139;      /* #64748B */
   }
 
   html {
-    background-color: #0B1120;
+    background-color: rgb(var(--surface-base));
   }
 
   body {
@@ -35,9 +62,22 @@
   }
 
   .card-surface {
-    background-color: #162033;
-    border: 1px solid #1F2A3C;
+    background-color: rgb(var(--surface-raised));
+    border: 1px solid rgb(var(--line));
     border-radius: 0.875rem;
+  }
+
+  /* Light-theme override of the frosted panel */
+  .light .glass {
+    background: linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(248, 250, 252, 0.9) 100%);
+    border: 1px solid rgba(203, 213, 225, 0.7);
+    box-shadow: 0 1px 0 0 rgba(255, 255, 255, 0.6) inset, 0 8px 24px -12px rgba(15, 23, 42, 0.18);
+  }
+
+  .light .chip {
+    border: 1px solid rgba(203, 213, 225, 0.8);
+    background: rgba(241, 245, 249, 0.85);
+    color: #475569;
   }
 
   /* Accent pills */
@@ -107,6 +147,19 @@
   border: 2px solid #0B1120;
 }
 ::-webkit-scrollbar-thumb:hover { background-color: #475569; }
+
+/* Custom scrollbar (light) */
+.light ::-webkit-scrollbar-track { background-color: #E2E8F0; }
+.light ::-webkit-scrollbar-thumb {
+  background-color: #CBD5E1;
+  border: 2px solid #E2E8F0;
+}
+.light ::-webkit-scrollbar-thumb:hover { background-color: #94A3B8; }
+
+/* Skeleton shimmer (light) */
+.light .skeleton {
+  background-image: linear-gradient(90deg, #E2E8F0 0px, #F1F5F9 40px, #E2E8F0 80px);
+}
 
 /* Web3 wallet-connected indicator */
 .wallet-connected { position: relative; }

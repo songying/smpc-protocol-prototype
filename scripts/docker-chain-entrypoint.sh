@@ -22,6 +22,8 @@ npx hardhat run scripts/deploy.cjs --network localhost
 
 echo "[chain] seeding demo data..."
 node scripts/seed-demo.cjs || echo "[chain] seed step failed (continuing)"
+# Rich demo data so every dashboard list/chart is populated for a walkthrough.
+node scripts/seed-demo-rich.cjs || echo "[chain] rich seed step failed (continuing)"
 
 echo "[chain] ready. Handing off to Hardhat node (pid $NODE_PID)."
 wait "$NODE_PID"

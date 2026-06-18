@@ -64,6 +64,10 @@ services:
       MPSPDZ_CLIENT_PORT_BASE: "14000"
       # Secrets
       JWT_SECRET: ${JWT_SECRET}
+      # JWT sign/verify uses NEXTAUTH_SECRET (see src/lib/api/middleware.ts &
+      # src/app/api/auth/*). Without it, every login throws and all dashboards
+      # are empty. Fall back to JWT_SECRET if NEXTAUTH_SECRET isn't set.
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-${JWT_SECRET}}
       ENCRYPTION_KEY: ${ENCRYPTION_KEY}
       SESSION_SECRET: ${SESSION_SECRET}
       # Client-safe flags

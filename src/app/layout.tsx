@@ -28,6 +28,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`dark ${inter.variable} ${jetbrainsMono.variable}`}>
+      <head>
+        {/* Apply the saved theme before first paint to avoid a flash of the
+            wrong theme. Dark is the SSR default; flip to light if persisted. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "(function(){try{var t=localStorage.getItem('theme');if(t==='light'){var r=document.documentElement;r.classList.remove('dark');r.classList.add('light');}}catch(e){}})();",
+          }}
+        />
+      </head>
       <body className="font-sans bg-surface-base text-ink antialiased">
         <WagmiProviderWrapper>
           <ThemeProvider>

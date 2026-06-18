@@ -12,20 +12,22 @@ export default {
         // ── Fintech / data-platform palette (dark-first) ──────────────────
         // Deep navy/slate surfaces with a teal + electric-blue accent system,
         // reading like a modern trading / analytics terminal.
+        // Theme-aware: backed by CSS variables (see globals.css) so these
+        // tokens flip between dark (default) and light (.light on <html>).
         surface: {
-          base: '#0B1120',   // app background
-          DEFAULT: '#0F172A', // panels
-          raised: '#162033',  // cards
-          inset: '#1E293B',   // wells / inputs
+          base: 'rgb(var(--surface-base) / <alpha-value>)',     // app background
+          DEFAULT: 'rgb(var(--surface) / <alpha-value>)',       // panels
+          raised: 'rgb(var(--surface-raised) / <alpha-value>)', // cards
+          inset: 'rgb(var(--surface-inset) / <alpha-value>)',   // wells / inputs
         },
         line: {
-          DEFAULT: '#1F2A3C', // hairline borders
-          strong: '#334155',
+          DEFAULT: 'rgb(var(--line) / <alpha-value>)', // hairline borders
+          strong: 'rgb(var(--line-strong) / <alpha-value>)',
         },
         ink: {
-          DEFAULT: '#E6EDF7', // primary text
-          muted: '#94A3B8',   // secondary text
-          faint: '#64748B',   // tertiary / captions
+          DEFAULT: 'rgb(var(--ink) / <alpha-value>)', // primary text
+          muted: 'rgb(var(--ink-muted) / <alpha-value>)',   // secondary text
+          faint: 'rgb(var(--ink-faint) / <alpha-value>)',   // tertiary / captions
         },
         // Accents
         brand: {

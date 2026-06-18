@@ -30,7 +30,7 @@ export async function GET(request: NextRequest) {
     const unreadOnly = searchParams.get('unread') === 'true'
     const type = searchParams.get('type')
 
-    const userAddress = authResult.address
+    const userAddress = authResult.user?.address
     const notificationKey = `notifications:${userAddress}`
     
     // Get all notifications for the user
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
 
     // Create notification
     const notificationId = `notif_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
-    const userId = targetUserId || authResult.address
+    const userId = targetUserId || authResult.user?.address
     const createdAt = new Date().toISOString()
     const expiresAt = expiresIn ? new Date(Date.now() + expiresIn * 1000).toISOString() : undefined
 
@@ -196,7 +196,7 @@ export async function PUT(request: NextRequest) {
       )
     }
 
-    const userAddress = authResult.address
+    const userAddress = authResult.user?.address
     const notificationData = await redisClient.hgetall(`notification:${notificationId}`)
 
     if (!notificationData || Object.keys(notificationData).length === 0) {
@@ -259,7 +259,7 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const action = searchParams.get('action') || 'clear_read'
 
-    const userAddress = authResult.address
+    const userAddress = authResult.user?.address
     const notificationKey = `notifications:${userAddress}`
     
     // Get all notification IDs for the user
