@@ -1,0 +1,78 @@
+{
+  "title": "Audit-trail tamper detection (Figure 5)",
+  "sessionId": "demo_lifecycle",
+  "recordCount": 6,
+  "headHash": "0xf62ba0038a1545596196ad159406673e27398f5c347dfc10cac3a5c34645e17a",
+  "parties": [
+    {
+      "index": 0,
+      "party": "provider",
+      "event": "data_registered",
+      "actor": "0xAc5Cd0Ee1B74dC7dB862746B002531dE96Cd2e39"
+    },
+    {
+      "index": 1,
+      "party": "compute_node",
+      "event": "shares_received",
+      "actor": "0xA0b7Eb2A94BE9493f911236e47Ce084e5f37901F"
+    },
+    {
+      "index": 2,
+      "party": "compute_node",
+      "event": "shares_received",
+      "actor": "0x3816a5d500B4Dc78d49f70C33502A4893EA163C2"
+    },
+    {
+      "index": 3,
+      "party": "compute_node",
+      "event": "compute_finished",
+      "actor": "0x21647A843Db914F50B355DC0BDB39fEDd74505A7"
+    },
+    {
+      "index": 4,
+      "party": "consumer",
+      "event": "result_acknowledged",
+      "actor": "0x8f165cedbe2B6C9dFa320e56259a563208D976eB"
+    },
+    {
+      "index": 5,
+      "party": "validator",
+      "event": "compliance_checked",
+      "actor": "0x1E595D9BcaA1352aEc0e0f76Fffc97C2E04aEE9E"
+    }
+  ],
+  "intact": {
+    "verification": {
+      "valid": true,
+      "brokenAt": null,
+      "checked": 6
+    },
+    "perRecordValid": [
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "tampered": {
+    "atIndex": 4,
+    "mutation": "consumer result 70.3 -> 0.0",
+    "verification": {
+      "valid": false,
+      "brokenAt": 4,
+      "reason": "hash_mismatch",
+      "detail": "record contents do not match its recorded hash",
+      "checked": 5
+    },
+    "perRecordValid": [
+      true,
+      true,
+      true,
+      true,
+      false,
+      false
+    ]
+  }
+}

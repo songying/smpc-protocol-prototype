@@ -1,0 +1,22 @@
+# Secure SUM and SUM-OF-SQUARES over N client inputs (ExternalIO). MP-SPDZ does the
+# multiplication v*v natively under Shamir; the client derives variance = S2/n - (S1/n)^2
+# from the two revealed values. No party sees any cleartext value.
+from Compiler.types import sint
+from Compiler.library import print_ln
+
+PORTNUM = 14000
+N = 10
+
+listen_for_clients(PORTNUM)
+print_ln('agg_variance: listening for client on base port %s', PORTNUM)
+socket = accept_client_connection(PORTNUM)
+
+values = sint.receive_from_client(N, socket)
+total = sint(0)
+sumsq = sint(0)
+for i in range(N):
+    total = total + values[i]
+    sumsq = sumsq + values[i] * values[i]
+
+sint.reveal_to_clients([socket], [total, sumsq])
+closeclientconnection(socket)

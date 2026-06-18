@@ -1,0 +1,98 @@
+{
+  "id": "b4cb6995-5a30-466e-8b67-4caeec1f100f",
+  "name": "Public Health Sample - Anonymized",
+  "description": "Sample health screening data for algorithm development and testing",
+  "schema": "health_screening_v1",
+  "data": {
+    "personalInfo": {
+      "name": "Joseph Jones",
+      "age": 62,
+      "gender": "M",
+      "height": 180,
+      "weight": 66,
+      "bmi": 20.4
+    },
+    "vitalSigns": {
+      "systolicBP": 133,
+      "diastolicBP": 74,
+      "heartRate": 71,
+      "temperature": 37.2,
+      "waistCircumference": 71,
+      "hipCircumference": 97,
+      "waistHipRatio": 0.73
+    },
+    "bloodWork": {
+      "totalCholesterol": 166.9,
+      "ldlCholesterol": 86.4,
+      "hdlCholesterol": 38.5,
+      "triglycerides": 91.8,
+      "glucose": 128.5,
+      "hba1c": 6.5,
+      "creatinine": 1.08,
+      "bun": 23,
+      "uricAcid": 4.3,
+      "totalProtein": 8.4,
+      "albumin": 5,
+      "globulin": 2.8,
+      "agRatio": 2.5
+    },
+    "liverFunction": {
+      "alt": 10,
+      "ast": 19,
+      "ggt": 34,
+      "alp": 116,
+      "totalBilirubin": 1.6,
+      "directBilirubin": 0.8,
+      "indirectBilirubin": 0.9
+    },
+    "thyroidFunction": {
+      "tsh": 0.94,
+      "ft3": 2.6,
+      "ft4": 1.6
+    },
+    "tumorMarkers": {
+      "afp": 14.8,
+      "cea": 5.2,
+      "ca125": 32.9,
+      "ca199": 18.5,
+      "psa": 0.8
+    },
+    "urinalysis": {
+      "specificGravity": 1.018,
+      "ph": 5.5,
+      "protein": "Negative",
+      "glucose": "Negative",
+      "ketones": "Negative",
+      "bloodCells": "None",
+      "bacteria": "None"
+    },
+    "imagingResults": {
+      "chestXray": "Normal chest structure",
+      "abdominalUltrasound": "Normal abdominal organs",
+      "thyroidUltrasound": "Normal thyroid structure",
+      "ecg": "Normal sinus rhythm"
+    },
+    "riskAssessment": {
+      "cardiovascularRisk": "Low",
+      "diabetesRisk": "High",
+      "overallHealthScore": 3
+    }
+  },
+  "owner_address": "public",
+  "privacy_level": "public",
+  "computation_types": [
+    "third_party",
+    "zk",
+    "fhe"
+  ],
+  "tags": [
+    "health",
+    "medical",
+    "screening",
+    "elderly",
+    "diabetes_risk",
+    "male"
+  ],
+  "created_at": "2025-08-22T09:02:14.017Z",
+  "updated_at": "2025-08-22T09:02:14.017Z"
+}

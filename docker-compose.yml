@@ -1,0 +1,261 @@
+services:
+  # Main SMPC Protocol Application
+  smpc-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: smpc-app
+    ports:
+      - "3000:3000"      # Next.js application
+      - "8545:8545"      # Hardhat blockchain node
+    environment:
+      - NODE_ENV=development
+      - REDIS_URL=redis://smpc-redis:6379
+      - REDIS_HOST=smpc-redis
+      - REDIS_PORT=6379
+      - MONGODB_URI=mongodb://smpc-mongodb:27017/smpc-protocol
+      - IPFS_HTTP_API_URL=http://smpc-ipfs:5001
+      - NEXT_PUBLIC_BLOCKCHAIN_RPC_URL=http://localhost:8545
+      - NEXT_PUBLIC_CHAIN_ID=1337
+      - PORT=3000
+      - SMPC_COORDINATOR_URL=http://smpc-coordinator:8080
+    volumes:
+      - ./src:/app/src                    # Source code for hot reload
+      - ./contracts:/app/contracts        # Smart contracts
+      - ./scripts:/app/scripts           # Deployment scripts
+      - ./data:/app/data                 # Sample data files
+      - ./docs:/app/docs                 # Documentation
+      - ./deployments:/app/deployments   # Contract deployments
+      - ./artifacts:/app/artifacts       # Compiled contracts
+      - ./public:/app/public             # Public assets
+      - /app/node_modules                # Preserve node_modules in container
+      - smpc-logs:/app/logs              # Persistent logs
+    depends_on:
+      - smpc-redis
+      - smpc-mongodb
+      - smpc-ipfs
+      - smpc-coordinator
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/health-check.sh"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Redis for caching and session management
+  smpc-redis:
+    image: redis:7-alpine
+    container_name: smpc-redis
+    ports:
+      - "16379:6379"     # Use high port to avoid Windows permission issues
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    volumes:
+      - smpc-redis-data:/data
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # IPFS for distributed file storage
+  smpc-ipfs:
+    image: ipfs/kubo:latest
+    container_name: smpc-ipfs
+    ports:
+      - "14001:4001"     # IPFS swarm port
+      - "15001:5001"     # IPFS HTTP API port  
+      - "18080:8080"     # IPFS Gateway port
+    environment:
+      - IPFS_PROFILE=server
+      - IPFS_PATH=/ipfsdata
+    volumes:
+      - smpc-ipfs-data:/ipfsdata
+      - ./data:/app/data:ro              # Mount sample data as read-only
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:5001/api/v0/version", "||", "exit", "1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # MongoDB for persistent data storage
+  smpc-mongodb:
+    image: mongo:7
+    container_name: smpc-mongodb
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=smpc
+      - MONGO_INITDB_ROOT_PASSWORD=smpc123
+      - MONGO_INITDB_DATABASE=smpc-protocol
+    volumes:
+      - smpc-mongodb-data:/data/db
+      - ./scripts/init-mongo.js:/docker-entrypoint-initdb.d/init-mongo.js:ro
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # SMPC Coordinator Service
+  smpc-coordinator:
+    build:
+      context: ./services/smpc-coordinator
+      dockerfile: Dockerfile
+    container_name: smpc-coordinator
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=development
+      - MONGODB_URI=mongodb://smpc:smpc123@smpc-mongodb:27017/smpc-protocol?authSource=admin
+      - REDIS_URL=redis://smpc-redis:6379
+      - MPSPDZ_NODES=smpc-mpspdz-node1:9999,smpc-mpspdz-node2:9999,smpc-mpspdz-node3:9999
+    volumes:
+      - ./services/smpc-coordinator/src:/app/src
+      - smpc-logs:/app/logs
+    depends_on:
+      - smpc-mongodb
+      - smpc-redis
+      - smpc-mpspdz-node1
+      - smpc-mpspdz-node2
+      - smpc-mpspdz-node3
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # SMPC Computation Node 1 (MP-SPDZ)
+  smpc-mpspdz-node1:
+    build:
+      context: ./services/mpspdz-node
+      dockerfile: Dockerfile
+    container_name: smpc-mpspdz-node1
+    ports:
+      - "9991:9999"
+    environment:
+      - NODE_ID=1
+      - NODE_PORT=9999
+      - COORDINATOR_URL=http://smpc-coordinator:8080
+    volumes:
+      - smpc-mpspdz-data1:/app/data
+      - ./data/programs:/app/programs:ro
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # SMPC Computation Node 2 (MP-SPDZ)
+  smpc-mpspdz-node2:
+    build:
+      context: ./services/mpspdz-node
+      dockerfile: Dockerfile
+    container_name: smpc-mpspdz-node2
+    ports:
+      - "9992:9999"
+    environment:
+      - NODE_ID=2
+      - NODE_PORT=9999
+      - COORDINATOR_URL=http://smpc-coordinator:8080
+    volumes:
+      - smpc-mpspdz-data2:/app/data
+      - ./data/programs:/app/programs:ro
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # SMPC Computation Node 3 (MP-SPDZ)
+  smpc-mpspdz-node3:
+    build:
+      context: ./services/mpspdz-node
+      dockerfile: Dockerfile
+    container_name: smpc-mpspdz-node3
+    ports:
+      - "9993:9999"
+    environment:
+      - NODE_ID=3
+      - NODE_PORT=9999
+      - COORDINATOR_URL=http://smpc-coordinator:8080
+    volumes:
+      - smpc-mpspdz-data3:/app/data
+      - ./data/programs:/app/programs:ro
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9999/status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Nginx reverse proxy (optional, for production-like setup)
+  smpc-proxy:
+    image: nginx:alpine
+    container_name: smpc-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - smpc-app
+    networks:
+      - smpc-network
+    restart: unless-stopped
+    profiles:
+      - production
+
+# Named volumes for data persistence
+volumes:
+  smpc-redis-data:
+    driver: local
+  smpc-mongodb-data:
+    driver: local
+  smpc-ipfs-data:
+    driver: local
+  smpc-logs:
+    driver: local
+  smpc-mpspdz-data1:
+    driver: local
+  smpc-mpspdz-data2:
+    driver: local
+  smpc-mpspdz-data3:
+    driver: local
+
+# Custom network for service communication
+networks:
+  smpc-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16

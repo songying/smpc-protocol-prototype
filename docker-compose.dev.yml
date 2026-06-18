@@ -1,0 +1,97 @@
+version: '3.8'
+
+services:
+  # Development overrides for the SMPC application
+  smpc-app:
+    build:
+      target: development
+    environment:
+      - NODE_ENV=development
+      - DEBUG=smpc:*
+      - CHOKIDAR_USEPOLLING=true        # For file watching on Windows/Docker
+      - WATCHPACK_POLLING=true          # Next.js file watching
+      - NEXT_PUBLIC_ENV=development
+      - HARDHAT_NETWORK=localhost
+    volumes:
+      # Additional development volumes for hot reload
+      - ./package.json:/app/package.json:ro
+      - ./package-lock.json:/app/package-lock.json:ro
+      - ./next.config.js:/app/next.config.js:ro
+      - ./tailwind.config.js:/app/tailwind.config.js:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+      - ./hardhat.config.cjs:/app/hardhat.config.cjs:ro
+      - ./postcss.config.cjs:/app/postcss.config.cjs:ro
+      - ./jest.config.cjs:/app/jest.config.cjs:ro
+      # Mount test directory for development testing
+      - ./test:/app/test:ro
+      - ./__tests__:/app/__tests__:ro
+    command: >
+      sh -c "
+        echo 'Starting development environment...' &&
+        echo 'Compiling smart contracts...' &&
+        npm run contracts:compile &&
+        echo 'Starting Hardhat node in background...' &&
+        npx hardhat node --network hardhat --hostname 0.0.0.0 --port 8545 &
+        HARDHAT_PID=\$! &&
+        echo 'Waiting for Hardhat node to start...' &&
+        sleep 15 &&
+        echo 'Checking if Hardhat node is ready...' &&
+        for i in \$(seq 1 10); do
+          if curl -s -X POST -H 'Content-Type: application/json' --data '{\"jsonrpc\":\"2.0\",\"method\":\"net_version\",\"params\":[],\"id\":1}' http://localhost:8545 > /dev/null 2>&1; then
+            echo 'Hardhat node is ready!' &&
+            break
+          else
+            echo 'Waiting for Hardhat node... attempt \$i' &&
+            sleep 3
+          fi
+        done &&
+        echo 'Deploying smart contracts...' &&
+        node scripts/simple-deploy.cjs &&
+        echo 'Starting Next.js development server...' &&
+        npm run dev
+      "
+
+  # Development overrides for Redis
+  smpc-redis:
+    command: redis-server --appendonly yes --maxmemory 128mb --maxmemory-policy allkeys-lru
+    volumes:
+      - smpc-redis-dev-data:/data
+
+  # Development overrides for IPFS
+  smpc-ipfs:
+    environment:
+      - IPFS_PROFILE=test
+    volumes:
+      - smpc-ipfs-dev-data:/ipfsdata
+      - ./data:/app/data:ro
+
+  # Development monitoring and debugging
+  smpc-monitor:
+    image: prom/prometheus:latest
+    container_name: smpc-monitor
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    networks:
+      - smpc-network
+    profiles:
+      - monitoring
+
+  # Development log aggregation
+  smpc-logs:
+    image: grafana/loki:latest
+    container_name: smpc-logs
+    ports:
+      - "3100:3100"
+    networks:
+      - smpc-network
+    profiles:
+      - logging
+
+# Development-specific volumes
+volumes:
+  smpc-redis-dev-data:
+    driver: local
+  smpc-ipfs-dev-data:
+    driver: local

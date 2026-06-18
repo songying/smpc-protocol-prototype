@@ -1,0 +1,158 @@
+# Production stack for public-internet deployment.
+#
+#   caddy ──HTTPS──> web ──> { redis, chain, node1..3 }
+#
+# Only Caddy publishes ports (80/443). Everything else is reachable only on the
+# internal network. One command on a fresh, domain-pointed VPS:
+#
+#   cp .env.prod.example .env.prod && ./scripts/gen-secrets.sh >> .env.prod
+#   # edit DOMAIN in .env.prod
+#   docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build
+#
+# See docs/PRODUCTION_DEPLOY.md for the full walkthrough.
+
+name: smpc
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@example.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - web
+    networks: [smpc]
+
+  web:
+    build:
+      context: .
+      target: production
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      # Next.js standalone binds to $HOSTNAME; Docker sets it to the container id,
+      # leaving the server off 0.0.0.0 (healthcheck refused, Caddy 502). Pin to 0.0.0.0.
+      HOSTNAME: 0.0.0.0
+      # Datastore
+      REDIS_URL: redis://smpc-redis:6379
+      REDIS_HOST: smpc-redis
+      REDIS_PORT: 6379
+      # On-chain bridge
+      ENABLE_ONCHAIN: "true"
+      ENABLE_REAL_SMPC: "true"
+      CONTRACT_NETWORK: localhost
+      RPC_URL: http://smpc-chain:8545
+      CHAIN_ID: "1337"
+      SERVER_PRIVATE_KEY: ${SERVER_PRIVATE_KEY}
+      # SMPC compute nodes
+      COORDINATOR_URL: http://smpc-chain:8545
+      SMPC_NODE_URLS: http://smpc-node1:9999,http://smpc-node2:9999,http://smpc-node3:9999
+      # Real MP-SPDZ external client (secret-shares inputs to the parties)
+      MPSPDZ_CLIENT_DIR: /mpspdz-shared
+      MPSPDZ_CLIENT_SCRIPT: /app/scripts/mpspdz-client.py
+      MPSPDZ_HOME: /mpspdz-shared
+      MPSPDZ_NODE_HOSTS: smpc-node1,smpc-node2,smpc-node3
+      MPSPDZ_CLIENT_PORT_BASE: "14000"
+      # Secrets
+      JWT_SECRET: ${JWT_SECRET}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY}
+      SESSION_SECRET: ${SESSION_SECRET}
+      # Client-safe flags
+      NEXT_PUBLIC_ENABLE_ONCHAIN: "true"
+      NEXT_PUBLIC_ENABLE_REAL_SMPC: "true"
+      NEXT_PUBLIC_CHAIN_NAME: ${NEXT_PUBLIC_CHAIN_NAME:-SMPC Local Chain}
+      NEXT_PUBLIC_EXPLORER_BASE: ${NEXT_PUBLIC_EXPLORER_BASE:-}
+    volumes:
+      # Shared deployment artifacts (addresses + ABIs) written by the chain.
+      - deployments:/app/deployments
+      # Dev certs + ExternalIO client published by the nodes (for the MP-SPDZ client).
+      - mpspdz_certs:/mpspdz-shared
+    depends_on:
+      smpc-redis:
+        condition: service_healthy
+      smpc-chain:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+    networks: [smpc]
+
+  # Persistent local chain. Redeploys (deterministic addresses) + idempotent
+  # reseed on each boot; writes addresses/ABIs to the shared deployments volume.
+  smpc-chain:
+    build:
+      context: .
+      target: builder
+    restart: unless-stopped
+    entrypoint: ["sh", "scripts/docker-chain-entrypoint.sh"]
+    environment:
+      CONTRACT_NETWORK: localhost
+      RPC_URL: http://127.0.0.1:8545
+      SERVER_PRIVATE_KEY: ${SERVER_PRIVATE_KEY}
+      REDIS_URL: redis://smpc-redis:6379
+      TEST_MNEMONIC: ${TEST_MNEMONIC:-test test test test test test test test test test test junk}
+    volumes:
+      - deployments:/app/deployments
+    depends_on:
+      smpc-redis:
+        condition: service_healthy
+    networks: [smpc]
+
+  smpc-redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks: [smpc]
+
+  # Each node runs a real MP-SPDZ shamir-party.x party (index 0/1/2). They find
+  # each other via party 0 (smpc-node1) and publish dev certs to the shared volume.
+  smpc-node1:
+    build: { context: ./services/mpspdz-node }
+    restart: unless-stopped
+    environment: { NODE_ID: "1", NODE_PORT: "9999", NODE_INDEX: "0", MPSPDZ_PARTY0_HOST: smpc-node1, MPSPDZ_SHARED: /mpspdz-shared }
+    volumes: ["mpspdz_certs:/mpspdz-shared"]
+    networks: [smpc]
+
+  smpc-node2:
+    build: { context: ./services/mpspdz-node }
+    restart: unless-stopped
+    environment: { NODE_ID: "2", NODE_PORT: "9999", NODE_INDEX: "1", MPSPDZ_PARTY0_HOST: smpc-node1, MPSPDZ_SHARED: /mpspdz-shared }
+    volumes: ["mpspdz_certs:/mpspdz-shared"]
+    networks: [smpc]
+
+  smpc-node3:
+    build: { context: ./services/mpspdz-node }
+    restart: unless-stopped
+    environment: { NODE_ID: "3", NODE_PORT: "9999", NODE_INDEX: "2", MPSPDZ_PARTY0_HOST: smpc-node1, MPSPDZ_SHARED: /mpspdz-shared }
+    volumes: ["mpspdz_certs:/mpspdz-shared"]
+    networks: [smpc]
+
+volumes:
+  deployments:
+  redis_data:
+  caddy_data:
+  caddy_config:
+  mpspdz_certs:
+
+networks:
+  smpc:
+    driver: bridge

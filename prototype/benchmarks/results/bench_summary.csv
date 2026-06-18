@@ -1,0 +1,37 @@
+backend,query,payload,trust,n,mean_ms,ci95_ms,min_ms,max_ms,peak_rss_mb,correct
+centralized,sum,1000,none (plaintext),10,0.016,0.004,0.012,0.027,161.546,true
+centralized,sum,10000,none (plaintext),10,0.010,0.010,0.005,0.050,161.563,true
+centralized,sum,100000,none (plaintext),10,0.047,0.002,0.046,0.054,161.563,true
+centralized,sum,500000,none (plaintext),10,0.228,0.001,0.227,0.232,161.563,true
+centralized,mean,1000,none (plaintext),10,0.001,0.000,0.001,0.002,161.612,true
+centralized,mean,10000,none (plaintext),10,0.005,0.000,0.005,0.005,161.628,true
+centralized,mean,100000,none (plaintext),10,0.046,0.000,0.046,0.046,161.628,true
+centralized,mean,500000,none (plaintext),10,0.229,0.001,0.228,0.231,161.628,true
+centralized,max,1000,none (plaintext),10,0.013,0.008,0.009,0.044,161.628,true
+centralized,max,10000,none (plaintext),10,0.019,0.017,0.012,0.087,161.628,true
+centralized,max,100000,none (plaintext),10,0.092,0.002,0.091,0.100,161.645,true
+centralized,max,500000,none (plaintext),10,0.454,0.001,0.453,0.458,161.645,true
+centralized,quantile(0.95),1000,none (plaintext),10,0.078,0.010,0.069,0.115,161.694,true
+centralized,quantile(0.95),10000,none (plaintext),10,1.007,0.008,0.991,1.025,161.694,true
+centralized,quantile(0.95),100000,none (plaintext),10,11.885,0.443,11.453,13.609,170.738,true
+centralized,quantile(0.95),500000,none (plaintext),10,61.495,0.475,60.616,62.549,219.251,true
+centralized,logreg,1000,none (plaintext),10,0.974,0.033,0.925,1.040,219.300,true
+centralized,logreg,10000,none (plaintext),10,12.276,0.040,12.212,12.412,219.300,true
+centralized,logreg,100000,none (plaintext),10,168.771,0.824,166.813,170.420,219.300,true
+centralized,logreg,500000,none (plaintext),10,871.304,2.529,865.433,878.461,214.499,true
+our-protocol,sum,1000,information-theoretic,10,1.868,0.609,1.415,4.216,204.521,true
+our-protocol,sum,10000,information-theoretic,10,13.816,0.117,13.575,14.010,204.587,true
+our-protocol,sum,100000,information-theoretic,10,138.664,0.577,137.453,139.733,204.603,true
+our-protocol,sum,500000,information-theoretic,10,697.497,0.999,695.316,700.218,204.734,true
+our-protocol,mean,1000,information-theoretic,10,1.397,0.071,1.315,1.521,204.751,true
+our-protocol,mean,10000,information-theoretic,10,13.874,0.108,13.564,14.058,204.751,true
+our-protocol,mean,100000,information-theoretic,10,139.976,1.003,138.889,142.466,204.784,true
+our-protocol,mean,500000,information-theoretic,10,701.184,3.746,695.906,713.745,204.915,true
+fhe,sum,1000,computational,10,4.324,0.467,3.922,6.136,210.043,true
+fhe,sum,10000,computational,10,7.324,0.140,7.087,7.636,211.550,true
+fhe,sum,100000,computational,10,42.514,0.041,42.412,42.599,216.973,true
+fhe,sum,500000,computational,10,200.196,0.389,199.222,200.933,242.713,true
+fhe,mean,1000,computational,10,4.068,0.273,3.891,5.147,243.155,true
+fhe,mean,10000,computational,10,7.235,0.095,7.120,7.477,243.253,true
+fhe,mean,100000,computational,10,42.589,0.106,42.241,42.808,243.319,true
+fhe,mean,500000,computational,10,199.495,0.848,197.189,201.015,243.696,true

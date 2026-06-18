@@ -1,0 +1,27 @@
+# Caddy reverse proxy with automatic HTTPS.
+#
+# Set DOMAIN (and optional ACME_EMAIL) in the environment. Caddy obtains and
+# renews a Let's Encrypt certificate automatically for a real domain. For a
+# bare IP or local testing, set DOMAIN=:80 to serve plain HTTP, or DOMAIN=
+# localhost to use Caddy's internal self-signed CA.
+
+{
+	email {$ACME_EMAIL:admin@example.com}
+}
+
+{$DOMAIN:localhost} {
+	encode zstd gzip
+
+	# Security headers
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		-Server
+	}
+
+	# Everything goes to the Next.js app (it serves both UI and API routes).
+	# Upstream is the compose SERVICE name ("web"), not the container/prefix name.
+	reverse_proxy web:3000
+}

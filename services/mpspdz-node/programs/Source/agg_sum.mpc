@@ -1,0 +1,21 @@
+# Secure SUM over N private inputs supplied by an external client (ExternalIO).
+# The client secret-shares its values to the N parties via receive_from_client;
+# no single party sees any cleartext value. The revealed sum is returned to the
+# client over its authenticated socket. Matches the thesis Phase III (MP-SPDZ).
+from Compiler.types import sint
+from Compiler.library import print_ln
+
+PORTNUM = 14000
+N = 10
+
+listen_for_clients(PORTNUM)
+print_ln('agg_sum: listening for client on base port %s', PORTNUM)
+socket = accept_client_connection(PORTNUM)
+
+values = sint.receive_from_client(N, socket)
+total = sint(0)
+for i in range(N):
+    total = total + values[i]
+
+sint.reveal_to_clients([socket], [total])
+closeclientconnection(socket)

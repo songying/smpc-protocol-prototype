@@ -1,0 +1,20 @@
+# Secure DOT PRODUCT over two N-length client vectors a, b (ExternalIO): the client
+# sends a (N values) followed by b (N values); the parties compute sum(a_i * b_i)
+# via native MP-SPDZ multiplication and reveal it. No party sees any cleartext.
+from Compiler.types import sint
+from Compiler.library import print_ln
+
+PORTNUM = 14000
+N = 10
+
+listen_for_clients(PORTNUM)
+print_ln('agg_dotproduct: listening for client on base port %s', PORTNUM)
+socket = accept_client_connection(PORTNUM)
+
+ab = sint.receive_from_client(2 * N, socket)
+total = sint(0)
+for i in range(N):
+    total = total + ab[i] * ab[N + i]
+
+sint.reveal_to_clients([socket], [total])
+closeclientconnection(socket)

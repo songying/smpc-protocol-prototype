@@ -1,0 +1,164 @@
+# Node.js
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js
+.next
+out
+*.tsbuildinfo
+
+# Production builds
+build
+dist
+
+# Environment files (exclude from container - will be mounted)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+.nyc_output
+test-results
+playwright-report
+
+# Logs
+logs
+*.log
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Cache directories
+.cache
+.parcel-cache
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile*
+docker-compose*
+.dockerignore
+
+# Documentation that doesn't need to be in container
+README.md
+CONTRIBUTING.md
+CODE_OF_CONDUCT.md
+SECURITY.md
+LICENSE
+
+# Temporary files
+tmp
+temp
+.tmp
+
+# Build artifacts that will be generated in container
+artifacts/build-info
+cache
+
+# Local development files
+*.local
+
+# Coverage reports
+coverage.json
+
+# Hardhat artifacts (will be generated in container)
+cache/solidity-files-cache.json
+
+# Windows specific
+*.lnk
+
+# macOS specific
+.AppleDouble
+.LSOverride
+
+# Linux specific
+*~
+
+# Backup files
+*.bak
+*.backup
+
+# Monitoring and logging (if present)
+monitoring/
+grafana/
+
+# Large files that don't need to be in container
+*.pdf
+*.zip
+*.tar.gz
+
+# Thesis assets, docs, and local Python venv — not needed at runtime, and large
+Thesis/
+docs/
+.venv/
+__tests__/
+__mocks__/
+test/
+*.docx
+*.pptx
+
+# TypeScript incremental compilation
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Dependency directories
+jspm_packages/
+
+# Snowpack dependency directory (https://snowpack.dev/)
+web_modules/
+
+# Stores VSCode versions used for testing VSCode extensions
+.vscode-test
+
+# yarn v2
+.yarn/cache
+.yarn/unplugged
+.yarn/build-state.yml
+.yarn/install-state.gz
+.pnp.*

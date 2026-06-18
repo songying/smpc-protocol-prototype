@@ -1,0 +1,234 @@
+# Healthcare Statistics SMPC Program
+# This program computes statistical analysis on healthcare data
+# while preserving privacy of individual records
+
+from Compiler.types import sint, regint, Array, Matrix
+from Compiler.library import print_ln
+from Compiler.util import if_else
+
+# Program configuration
+program.use_trunc_pr = True
+program.security = 40
+
+def read_healthcare_data():
+    """Read healthcare data from input files"""
+    print_ln("Reading healthcare data...")
+    
+    # Number of records from each party
+    n_records = regint()
+    n_records = regint.read_from_file()
+    
+    # Data structure: age, bmi, bp_systolic, bp_diastolic, cholesterol, glucose, smoker
+    n_fields = 7
+    
+    # Read data matrix
+    data = Matrix(n_records, n_fields, sint)
+    
+    for i in range(n_records):
+        for j in range(n_fields):
+            data[i][j] = sint.get_input_from(0)  # Read from party 0
+    
+    print_ln("Data loaded: %s records with %s fields", n_records, n_fields)
+    return data, n_records, n_fields
+
+def compute_basic_statistics(data, n_records, n_fields):
+    """Compute basic statistical measures"""
+    print_ln("Computing basic statistics...")
+    
+    # Initialize results
+    means = Array(n_fields, sint)
+    variances = Array(n_fields, sint)
+    
+    # Compute means
+    for field in range(n_fields):
+        field_sum = sint(0)
+        for record in range(n_records):
+            field_sum += data[record][field]
+        means[field] = field_sum / n_records
+    
+    # Compute variances
+    for field in range(n_fields):
+        variance_sum = sint(0)
+        for record in range(n_records):
+            diff = data[record][field] - means[field]
+            variance_sum += diff * diff
+        variances[field] = variance_sum / (n_records - 1)
+    
+    return means, variances
+
+def compute_correlations(data, n_records, means):
+    """Compute correlation coefficients between key health metrics"""
+    print_ln("Computing correlations...")
+    
+    # BMI (field 1) vs Blood Pressure Systolic (field 2)
+    bmi_bp_corr = compute_correlation(data, n_records, 1, 2, means[1], means[2])
+    
+    # Age (field 0) vs Cholesterol (field 4)
+    age_chol_corr = compute_correlation(data, n_records, 0, 4, means[0], means[4])
+    
+    # BMI (field 1) vs Cholesterol (field 4)
+    bmi_chol_corr = compute_correlation(data, n_records, 1, 4, means[1], means[4])
+    
+    return bmi_bp_corr, age_chol_corr, bmi_chol_corr
+
+def compute_correlation(data, n_records, field1, field2, mean1, mean2):
+    """Compute Pearson correlation coefficient between two fields"""
+    numerator = sint(0)
+    sum_sq1 = sint(0)
+    sum_sq2 = sint(0)
+    
+    for i in range(n_records):
+        diff1 = data[i][field1] - mean1
+        diff2 = data[i][field2] - mean2
+        
+        numerator += diff1 * diff2
+        sum_sq1 += diff1 * diff1
+        sum_sq2 += diff2 * diff2
+    
+    # Compute correlation (simplified - in practice would need square root)
+    # For demo purposes, we'll use a simplified correlation measure
+    correlation = numerator / (sum_sq1.sqrt() * sum_sq2.sqrt())
+    
+    return correlation
+
+def compute_risk_factors(data, n_records):
+    """Compute prevalence of various health risk factors"""
+    print_ln("Computing risk factors...")
+    
+    # Risk thresholds (scaled for fixed-point arithmetic)
+    bmi_overweight = sint(25 * 1000)  # BMI > 25
+    bp_high = sint(140 * 1000)        # Systolic BP > 140
+    chol_high = sint(200 * 1000)      # Cholesterol > 200
+    glucose_high = sint(126 * 1000)   # Glucose > 126
+    
+    # Count risk factors
+    overweight_count = sint(0)
+    hypertension_count = sint(0)
+    high_cholesterol_count = sint(0)
+    diabetes_risk_count = sint(0)
+    smoker_count = sint(0)
+    
+    for i in range(n_records):
+        # BMI risk (field 1)
+        overweight_count += (data[i][1] > bmi_overweight).if_else(1, 0)
+        
+        # Blood pressure risk (field 2)
+        hypertension_count += (data[i][2] > bp_high).if_else(1, 0)
+        
+        # Cholesterol risk (field 4)
+        high_cholesterol_count += (data[i][4] > chol_high).if_else(1, 0)
+        
+        # Glucose risk (field 5)
+        diabetes_risk_count += (data[i][5] > glucose_high).if_else(1, 0)
+        
+        # Smoking risk (field 6)
+        smoker_count += data[i][6]
+    
+    return overweight_count, hypertension_count, high_cholesterol_count, diabetes_risk_count, smoker_count
+
+def compute_demographic_analysis(data, n_records):
+    """Analyze health metrics by demographics"""
+    print_ln("Computing demographic analysis...")
+    
+    # Age group analysis (simplified)
+    young_count = sint(0)  # < 40
+    middle_count = sint(0)  # 40-60
+    older_count = sint(0)   # > 60
+    
+    young_bmi_sum = sint(0)
+    middle_bmi_sum = sint(0)
+    older_bmi_sum = sint(0)
+    
+    age_40 = sint(40 * 1000)
+    age_60 = sint(60 * 1000)
+    
+    for i in range(n_records):
+        age = data[i][0]
+        bmi = data[i][1]
+        
+        is_young = age < age_40
+        is_middle = (age >= age_40) * (age <= age_60)
+        is_older = age > age_60
+        
+        young_count += is_young.if_else(1, 0)
+        middle_count += is_middle.if_else(1, 0)
+        older_count += is_older.if_else(1, 0)
+        
+        young_bmi_sum += is_young.if_else(bmi, 0)
+        middle_bmi_sum += is_middle.if_else(bmi, 0)
+        older_bmi_sum += is_older.if_else(bmi, 0)
+    
+    # Average BMI by age group
+    young_avg_bmi = young_bmi_sum / young_count.max(1)  # Avoid division by zero
+    middle_avg_bmi = middle_bmi_sum / middle_count.max(1)
+    older_avg_bmi = older_bmi_sum / older_count.max(1)
+    
+    return young_count, middle_count, older_count, young_avg_bmi, middle_avg_bmi, older_avg_bmi
+
+def output_results(means, variances, correlations, risk_counts, demographics):
+    """Output all computed statistics"""
+    print_ln("=== HEALTHCARE STATISTICS RESULTS ===")
+    
+    # Field names for reference
+    field_names = ["Age", "BMI", "BP_Systolic", "BP_Diastolic", "Cholesterol", "Glucose", "Smoker"]
+    
+    # Basic statistics
+    print_ln("Population Statistics:")
+    for i in range(7):
+        print_ln("  %s - Mean: %s, Variance: %s", field_names[i], means[i].reveal(), variances[i].reveal())
+    
+    # Correlations
+    bmi_bp_corr, age_chol_corr, bmi_chol_corr = correlations
+    print_ln("Correlation Analysis:")
+    print_ln("  BMI vs Blood Pressure: %s", bmi_bp_corr.reveal())
+    print_ln("  Age vs Cholesterol: %s", age_chol_corr.reveal())
+    print_ln("  BMI vs Cholesterol: %s", bmi_chol_corr.reveal())
+    
+    # Risk factors
+    overweight, hypertension, high_chol, diabetes_risk, smokers = risk_counts
+    print_ln("Risk Factor Prevalence:")
+    print_ln("  Overweight (BMI > 25): %s", overweight.reveal())
+    print_ln("  Hypertension (BP > 140): %s", hypertension.reveal())
+    print_ln("  High Cholesterol (> 200): %s", high_chol.reveal())
+    print_ln("  Diabetes Risk (Glucose > 126): %s", diabetes_risk.reveal())
+    print_ln("  Smokers: %s", smokers.reveal())
+    
+    # Demographics
+    young_count, middle_count, older_count, young_bmi, middle_bmi, older_bmi = demographics
+    print_ln("Demographic Analysis:")
+    print_ln("  Age < 40: Count = %s, Avg BMI = %s", young_count.reveal(), young_bmi.reveal())
+    print_ln("  Age 40-60: Count = %s, Avg BMI = %s", middle_count.reveal(), middle_bmi.reveal())
+    print_ln("  Age > 60: Count = %s, Avg BMI = %s", older_count.reveal(), older_bmi.reveal())
+    
+    print_ln("=== END RESULTS ===")
+
+# Main computation function
+def main():
+    """Main healthcare statistics computation"""
+    print_ln("Starting Healthcare Statistics SMPC Computation")
+    print_ln("Protocol: Secure Multi-Party Computation")
+    print_ln("Privacy: Individual records remain private")
+    
+    # Read input data
+    data, n_records, n_fields = read_healthcare_data()
+    
+    # Compute basic statistics
+    means, variances = compute_basic_statistics(data, n_records, n_fields)
+    
+    # Compute correlations
+    correlations = compute_correlations(data, n_records, means)
+    
+    # Compute risk factors
+    risk_counts = compute_risk_factors(data, n_records)
+    
+    # Compute demographic analysis
+    demographics = compute_demographic_analysis(data, n_records)
+    
+    # Output all results
+    output_results(means, variances, correlations, risk_counts, demographics)
+    
+    print_ln("Healthcare Statistics Computation Complete")
+
+# Execute main function
+if __name__ == "__main__":
+    main()
