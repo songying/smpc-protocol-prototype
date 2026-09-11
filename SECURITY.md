@@ -21,8 +21,7 @@ We actively maintain security updates for the following versions:
 Instead, please report them responsibly:
 
 ### 📧 Contact Information
-- **Email**: security@smpc-protocol.org
-- **PGP Key**: [Download Public Key](https://keybase.io/smpc_protocol/pgp_keys.asc)
+- **Email**: alvin.song@connect.polyu.edu.hk
 - **Response Time**: We aim to respond within 24 hours
 
 ### 📋 What to Include
@@ -153,9 +152,8 @@ We operate a bug bounty program for qualifying vulnerabilities:
 ## 📞 Contact
 
 For security-related questions:
-- **Security Team**: security@smpc-protocol.org
-- **General Issues**: [GitHub Issues](https://github.com/songying/smpc-protocol/issues)
-- **Discord**: [Security Channel](https://discord.gg/smpc-protocol) (coming soon)
+- **Security Team**: alvin.song@connect.polyu.edu.hk
+- **General Issues**: [GitHub Issues](https://github.com/songying/smpc-protocol-prototype/issues)
 
 ---
 

@@ -367,7 +367,7 @@ Contributors will be recognized in:
 ## 📞 Contact
 
 - **Project Maintainer**: [@songying](https://github.com/songying)
-- **Email**: maintainer@smpc-protocol.org
+- **Email**: alvin.song@connect.polyu.edu.hk
 - **Issues**: [GitHub Issues](https://github.com/songying/smpc-protocol/issues)
 
 ---

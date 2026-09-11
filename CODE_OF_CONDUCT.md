@@ -43,7 +43,7 @@ This Code of Conduct applies within all project spaces, and also applies when an
 
 ## 📞 Enforcement
 
-Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at conduct@smpc-protocol.org. All complaints will be reviewed and investigated and will result in a response that is deemed necessary and appropriate to the circumstances.
+Instances of abusive, harassing, or otherwise unacceptable behavior may be reported by contacting the project team at alvin.song@connect.polyu.edu.hk. All complaints will be reviewed and investigated and will result in a response that is deemed necessary and appropriate to the circumstances.
 
 ### Reporting Guidelines
 
@@ -142,9 +142,9 @@ Community Impact Guidelines were inspired by [Mozilla's code of conduct enforcem
 
 ## 📞 Contact Information
 
-- **Code of Conduct Team**: conduct@smpc-protocol.org
+- **Code of Conduct Team**: alvin.song@connect.polyu.edu.hk
 - **Project Maintainer**: [@songying](https://github.com/songying)
-- **Community Manager**: community@smpc-protocol.org
+- **Community Manager**: alvin.song@connect.polyu.edu.hk
 
 For questions about this Code of Conduct, please reach out to our team. We're here to help create a welcoming and inclusive community for everyone.
 
