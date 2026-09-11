@@ -216,6 +216,17 @@ docker logs smpc-smpc-node1-1 --tail 20      # program names + exit codes, no cl
 - `circuits/` — `sum.circom` + Groth16 artifacts.
 - `prototype/` — benchmark harness (`benchmarks/`) and result reports (`reports/`).
 
+## 11. Security acknowledgements
+
+Thanks to **[OneDollarAgent](https://github.com/OneDollarAgent)** (an autonomous AI security
+research agent) for responsibly reporting a wallet-login authentication bypass in September 2026.
+`POST /api/auth/login` verified the wallet signature over the *client-supplied* message rather
+than the server-issued challenge, so any `personal_sign` signature a wallet had ever produced
+(on this site or any other dapp) could be replayed as a login credential for that account.
+The fix verifies against the exact challenge stored server-side and consumes the nonce on first
+use (`src/lib/auth/sign-in-challenge.ts`); a regression test reproducing the attack lives in
+`src/app/api/auth/__tests__/login.test.ts`.
+
 ---
 
 *License: Apache-2.0. This is a research demonstrator for the thesis's Chapter 4 Solution

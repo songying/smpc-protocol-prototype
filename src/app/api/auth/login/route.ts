@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { verifyMessage } from 'viem'
 import jwt from 'jsonwebtoken'
 import { 
@@ -8,9 +8,13 @@ import {
   createErrorResponse,
   ValidationException,
   validateRequired,
-  validateEthereumAddress,
-  generateNonce
+  validateEthereumAddress
 } from '@/lib/api/utils'
+import {
+  challengeKey,
+  isChallengeFresh,
+  parseStoredChallenge
+} from '@/lib/auth/sign-in-challenge'
 import { LoginRequest, LoginResponse, User, UserRole } from '@/lib/api/types'
 import { redis } from '@/lib/redis'
 
@@ -35,26 +39,41 @@ export const POST = asyncHandler(async (request: NextRequest) => {
   }
   
   try {
-    // Verify the nonce exists and hasn't expired
-    const storedNonce = await redis.get(`auth:nonce:${address}`)
-    if (!storedNonce || storedNonce !== nonce) {
+    // Single-use challenge: consume it before any verification so a failed or
+    // replayed attempt can never be retried against the same nonce.
+    const key = challengeKey(address)
+    const storedRaw = await redis.get(key)
+    if (storedRaw) {
+      await redis.del(key)
+    }
+
+    const challenge = parseStoredChallenge(storedRaw)
+    if (!challenge || challenge.nonce !== nonce) {
       return createErrorResponse('Invalid or expired nonce', 401)
     }
-    
-    // Verify the signature
+
+    if (!isChallengeFresh(challenge)) {
+      return createErrorResponse('Sign-in challenge has expired', 401)
+    }
+
+    // The signed text must be exactly the challenge this server issued for
+    // this address. A client-supplied message is never used for verification.
+    if (message !== challenge.message) {
+      return createErrorResponse('Message does not match the issued sign-in challenge', 401)
+    }
+
+    // verifyMessage recovers the signer from the signature over the *stored*
+    // message and requires it to equal the claimed address.
     const isValidSignature = await verifyMessage({
       address: address as `0x${string}`,
-      message,
+      message: challenge.message,
       signature: signature as `0x${string}`
     })
-    
+
     if (!isValidSignature) {
       return createErrorResponse('Invalid signature', 401)
     }
-    
-    // Delete used nonce
-    await redis.del(`auth:nonce:${address}`)
-    
+
     // Get or create user
     let user = await getUserByAddress(address)
     if (!user) {

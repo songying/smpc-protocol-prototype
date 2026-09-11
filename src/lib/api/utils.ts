@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomBytes } from 'crypto'
 import { ApiResponse, ApiError, ValidationError } from './types'
 
 // Response helpers
@@ -231,8 +232,8 @@ export function sanitizeInput(input: string): string {
 }
 
 export function generateNonce(): string {
-  return Math.random().toString(36).substring(2, 15) + 
-         Math.random().toString(36).substring(2, 15)
+  // CSPRNG: Math.random() must never be used for authentication material
+  return randomBytes(16).toString('hex')
 }
 
 export function hashString(input: string): string {
